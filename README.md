@@ -10,15 +10,9 @@ This is a [Next.js](https://nextjs.org) project implementing OAuth2 authenticati
 
 ## Getting Started
 
-1. Copy the example environment file and configure it:
+1. Edit `.env.local` with your OAuth2 server configuration if needed.
 
-```bash
-cp .env.example .env.local
-```
-
-2. Edit `.env.local` with your OAuth2 server configuration if needed.
-
-3. Run the development server:
+2. Run the development server:
 
 ```bash
 pnpm dev
