@@ -1,7 +1,7 @@
 "use client"
 
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 
 // Generate a random string for code_verifier
@@ -28,7 +28,7 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
   return base64UrlEncode(new Uint8Array(hash))
 }
 
-export default function Home() {
+function HomeContent() {
   const [authUrl, setAuthUrl] = useState<string>("#")
   const searchParams = useSearchParams()
   const error = searchParams.get("error")
@@ -95,5 +95,26 @@ export default function Home() {
         </p>
       </main>
     </div>
+  )
+}
+
+// Loading fallback for Suspense
+function LoadingFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+      <main className="flex w-full max-w-md flex-col items-center gap-6 rounded-lg bg-white p-8 shadow-lg dark:bg-zinc-900">
+        <h1 className="text-3xl font-bold">Welcome</h1>
+        <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-blue-600"></div>
+      </main>
+    </div>
+  )
+}
+
+// Wrap the component that uses useSearchParams in Suspense
+export default function Home() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <HomeContent />
+    </Suspense>
   )
 }

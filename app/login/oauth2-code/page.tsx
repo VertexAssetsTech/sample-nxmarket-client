@@ -1,9 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 
-export default function OAuth2Callback() {
+function OAuth2CallbackContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [status, setStatus] = useState<string>("Processing...")
@@ -206,5 +206,29 @@ async function validateIdToken(idToken: string, expectedNonce: string): Promise<
     console.error("ID token validation error:", error)
     return false
   }
+}
+
+// Loading fallback for Suspense
+function LoadingFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+      <main className="flex w-full max-w-md flex-col items-center gap-4 rounded-lg bg-white p-8 shadow-lg dark:bg-zinc-900">
+        <h1 className="text-2xl font-bold">OAuth2 Callback</h1>
+        <div className="flex flex-col items-center gap-2">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-blue-600"></div>
+          <p className="text-sm text-zinc-600 dark:text-zinc-400">Loading...</p>
+        </div>
+      </main>
+    </div>
+  )
+}
+
+// Wrap the component that uses useSearchParams in Suspense
+export default function OAuth2Callback() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <OAuth2CallbackContent />
+    </Suspense>
+  )
 }
 
