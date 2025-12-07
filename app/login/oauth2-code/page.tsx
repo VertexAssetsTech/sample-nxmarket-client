@@ -47,7 +47,8 @@ function OAuth2CallbackContent() {
 
         setStatus("Exchanging authorization code for tokens...")
 
-        // Exchange authorization code for tokens
+        // Exchange authorization code for tokens via Next.js server
+        // This keeps client_secret secure on the server and sets refresh_token as HTTP-only cookie
         const tokenResponse = await exchangeCodeForTokens(code, codeVerifier)
 
         if (!tokenResponse.success) {
@@ -68,11 +69,9 @@ function OAuth2CallbackContent() {
 
         setStatus("Authentication successful! Redirecting...")
 
-        // Store tokens in localStorage (or you could use cookies)
+        // Store access_token and id_token in localStorage
+        // Note: refresh_token is now stored as HTTP-only cookie by the server
         localStorage.setItem("access_token", tokenResponse.access_token)
-        if (tokenResponse.refresh_token) {
-          localStorage.setItem("refresh_token", tokenResponse.refresh_token)
-        }
         if (tokenResponse.id_token) {
           localStorage.setItem("id_token", tokenResponse.id_token)
         }
@@ -119,7 +118,6 @@ interface TokenResponse {
   access_token: string
   token_type: string
   expires_in?: number
-  refresh_token?: string
   id_token?: string
   error?: string
 }
@@ -128,24 +126,18 @@ async function exchangeCodeForTokens(
   code: string,
   codeVerifier: string
 ): Promise<TokenResponse> {
-  const tokenEndpoint = process.env.NEXT_PUBLIC_OAUTH2_TOKEN_ENDPOINT!
-  const clientId = process.env.NEXT_PUBLIC_OAUTH2_CLIENT_ID!
-  const redirectUri = process.env.NEXT_PUBLIC_OAUTH2_REDIRECT_URI!
-
   try {
-    const tokenParams = new URLSearchParams()
-    tokenParams.set("grant_type", "authorization_code")
-    tokenParams.set("code", code)
-    tokenParams.set("redirect_uri", redirectUri)
-    tokenParams.set("client_id", clientId)
-    tokenParams.set("code_verifier", codeVerifier)
-
-    const response = await fetch(tokenEndpoint, {
+    // Call our Next.js server API to exchange the code
+    // The server handles client_secret and sets refresh_token as HTTP-only cookie
+    const response = await fetch("/api/auth/token", {
       method: "POST",
       headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
+        "Content-Type": "application/json",
       },
-      body: tokenParams.toString(),
+      body: JSON.stringify({
+        code,
+        code_verifier: codeVerifier,
+      }),
     })
 
     if (!response.ok) {
@@ -165,7 +157,6 @@ async function exchangeCodeForTokens(
       access_token: data.access_token,
       token_type: data.token_type,
       expires_in: data.expires_in,
-      refresh_token: data.refresh_token,
       id_token: data.id_token,
     }
   } catch (error) {

@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 
 interface UserInfo {
@@ -33,6 +33,71 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileError, setProfileError] = useState<string | null>(null)
+
+  // Refresh access token using HTTP-only refresh token cookie
+  const refreshAccessToken = useCallback(async (): Promise<string | null> => {
+    try {
+      const response = await fetch("/api/auth/refresh", {
+        method: "POST",
+        credentials: "include", // Include cookies
+      })
+
+      if (!response.ok) {
+        // Refresh failed - user needs to re-authenticate
+        return null
+      }
+
+      const data = await response.json()
+      
+      // Update stored access token
+      localStorage.setItem("access_token", data.access_token)
+      if (data.id_token) {
+        localStorage.setItem("id_token", data.id_token)
+      }
+      
+      return data.access_token
+    } catch (error) {
+      console.error("Token refresh error:", error)
+      return null
+    }
+  }, [])
+
+  // Make an authenticated API request with automatic token refresh
+  const fetchWithAuth = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
+    let token = localStorage.getItem("access_token")
+    
+    const makeRequest = async (accessToken: string) => {
+      return fetch(url, {
+        ...options,
+        headers: {
+          ...options.headers,
+          "Authorization": `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      })
+    }
+
+    if (!token) {
+      throw new Error("No access token available")
+    }
+
+    let response = await makeRequest(token)
+
+    // If unauthorized, try to refresh the token
+    if (response.status === 401) {
+      const newToken = await refreshAccessToken()
+      if (newToken) {
+        setAccessToken(newToken)
+        response = await makeRequest(newToken)
+      } else {
+        // Refresh failed - redirect to login
+        router.push("/")
+        throw new Error("Session expired")
+      }
+    }
+
+    return response
+  }, [refreshAccessToken, router])
 
   useEffect(() => {
     // Check for access token
@@ -68,13 +133,7 @@ export default function Dashboard() {
           throw new Error("NEXT_PUBLIC_NXMARKET_API environment variable is not set")
         }
         
-        const response = await fetch(`${apiUrl}/api/v1/users/me`, {
-          method: "GET",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
+        const response = await fetchWithAuth(`${apiUrl}/api/v1/users/me`)
 
         if (!response.ok) {
           throw new Error(`Failed to fetch profile: ${response.status} ${response.statusText}`)
@@ -92,11 +151,21 @@ export default function Dashboard() {
 
     fetchProfile()
     setLoading(false)
-  }, [router])
+  }, [router, fetchWithAuth])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    // Call server to clear HTTP-only refresh token cookie
+    try {
+      await fetch("/api/auth/logout", {
+        method: "POST",
+        credentials: "include",
+      })
+    } catch (error) {
+      console.error("Logout error:", error)
+    }
+    
+    // Clear client-side tokens
     localStorage.removeItem("access_token")
-    localStorage.removeItem("refresh_token")
     localStorage.removeItem("id_token")
     router.push("/")
   }
