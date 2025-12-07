@@ -2,7 +2,7 @@
 
 import Link from "next/link"
 import { Suspense, useEffect, useState } from "react"
-import { useSearchParams } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 
 // Generate a random string for code_verifier
 function generateCodeVerifier(): string {
@@ -29,13 +29,25 @@ async function generateCodeChallenge(verifier: string): Promise<string> {
 }
 
 function HomeContent() {
+  const router = useRouter()
   const [authUrl, setAuthUrl] = useState<string>("#")
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true)
   const searchParams = useSearchParams()
   const error = searchParams.get("error")
   const errorDescription = searchParams.get("error_description")
 
   useEffect(() => {
-    async function setupPKCE() {
+    async function checkAuthAndSetupPKCE() {
+      // Check if user already has an access token
+      const accessToken = localStorage.getItem("access_token")
+      if (accessToken) {
+        // User is already logged in, redirect to dashboard
+        router.push("/dashboard")
+        return
+      }
+
+      setIsCheckingAuth(false)
+
       const clientId = process.env.NEXT_PUBLIC_OAUTH2_CLIENT_ID!
       const scope = process.env.NEXT_PUBLIC_OAUTH2_SCOPE!
       const redirectUri = process.env.NEXT_PUBLIC_OAUTH2_REDIRECT_URI!
@@ -67,8 +79,20 @@ function HomeContent() {
       setAuthUrl(`${authorizationEndpoint}?${usp.toString()}`)
     }
 
-    setupPKCE()
-  }, [])
+    checkAuthAndSetupPKCE()
+  }, [router])
+
+  // Show loading while checking authentication status
+  if (isCheckingAuth) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
+        <main className="flex w-full max-w-md flex-col items-center gap-6 rounded-lg bg-white p-8 shadow-lg dark:bg-zinc-900">
+          <h1 className="text-3xl font-bold">Welcome</h1>
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-zinc-200 border-t-blue-600"></div>
+        </main>
+      </div>
+    )
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">

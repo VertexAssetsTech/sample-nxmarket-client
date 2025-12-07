@@ -12,6 +12,12 @@ This is a [Next.js](https://nextjs.org) project implementing OAuth2 authenticati
 
 1. Edit `.env.local` with your OAuth2 server configuration if needed.
 
+```sh
+tee .env.local<<EOL
+OAUTH2_CLIENT_SECRET=P9fMuNLHz9XtJs43gjMyNaguXrbchXEwQZxptu4Zi
+EOL
+```
+
 2. Run the development server:
 
 ```bash

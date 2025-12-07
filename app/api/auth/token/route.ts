@@ -28,9 +28,9 @@ export async function POST(request: NextRequest) {
 
     // Server-side OAuth credentials (not exposed to client)
     const tokenEndpoint = process.env.OAUTH2_TOKEN_ENDPOINT
-    const clientId = process.env.OAUTH2_CLIENT_ID
+    const clientId = process.env.NEXT_PUBLIC_OAUTH2_CLIENT_ID
     const clientSecret = process.env.OAUTH2_CLIENT_SECRET
-    const redirectUri = process.env.OAUTH2_REDIRECT_URI
+    const redirectUri = process.env.NEXT_PUBLIC_OAUTH2_REDIRECT_URI
 
     if (!tokenEndpoint || !clientId || !clientSecret || !redirectUri) {
       console.error("Missing OAuth2 configuration")
@@ -45,14 +45,15 @@ export async function POST(request: NextRequest) {
     tokenParams.set("grant_type", "authorization_code")
     tokenParams.set("code", code)
     tokenParams.set("redirect_uri", redirectUri)
-    tokenParams.set("client_id", clientId)
-    tokenParams.set("client_secret", clientSecret)
     tokenParams.set("code_verifier", code_verifier)
 
     const tokenResponse = await fetch(tokenEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+
+        // Basic Authentication type for this client
+        "Authorization": `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
       },
       body: tokenParams.toString(),
     })

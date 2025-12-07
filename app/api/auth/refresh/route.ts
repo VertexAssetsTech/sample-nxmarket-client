@@ -28,7 +28,7 @@ export async function POST() {
 
     // Server-side OAuth credentials
     const tokenEndpoint = process.env.OAUTH2_TOKEN_ENDPOINT
-    const clientId = process.env.OAUTH2_CLIENT_ID
+    const clientId = process.env.NEXT_PUBLIC_OAUTH2_CLIENT_ID
     const clientSecret = process.env.OAUTH2_CLIENT_SECRET
 
     if (!tokenEndpoint || !clientId || !clientSecret) {

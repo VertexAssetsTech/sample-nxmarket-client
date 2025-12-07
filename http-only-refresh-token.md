@@ -34,9 +34,7 @@ These are used by Next.js API routes to securely exchange tokens. Do NOT prefix 
 
 ```bash
 OAUTH2_TOKEN_ENDPOINT=https://your-auth-server.com/oauth2/token
-OAUTH2_CLIENT_ID=your-client-id
 OAUTH2_CLIENT_SECRET=your-client-secret
-OAUTH2_REDIRECT_URI=http://localhost:3074/login/oauth2-code
 ```
 
 ### Client-side (exposed to browser)
