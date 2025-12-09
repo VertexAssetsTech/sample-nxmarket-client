@@ -18,6 +18,18 @@ OAUTH2_CLIENT_SECRET=P9fMuNLHz9XtJs43gjMyNaguXrbchXEwQZxptu4Zi
 EOL
 ```
 
+```sh
+# This is configuration for staging-auth with http-only mode
+tee .env.local<<EOL
+NEXT_PUBLIC_OAUTH2_AUTHORIZATION_ENDPOINT=https://staging-auth.apedax.com/oauth2/authorize
+OAUTH2_TOKEN_ENDPOINT=https://staging-auth.apedax.com/oauth2/token
+OAUTH2_CLIENT_SECRET=P9fMuNLHz9XtJs43gjMyNaguXrbchXEwQZxptu4Zi
+
+# NXMarket API base URL - for fetching user profile and other API calls
+NEXT_PUBLIC_NXMARKET_API=https://staging-exchange.apedax.com
+EOL
+```
+
 2. Run the development server:
 
 ```bash
