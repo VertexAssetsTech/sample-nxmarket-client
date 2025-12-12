@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { LogoutButton } from "./components/LogoutButton"
 
 interface UserInfo {
   sub?: string
@@ -153,23 +154,6 @@ export default function Dashboard() {
     setLoading(false)
   }, [router, fetchWithAuth])
 
-  const handleLogout = async () => {
-    // Call server to clear HTTP-only refresh token cookie
-    try {
-      await fetch("/api/auth/logout", {
-        method: "POST",
-        credentials: "include",
-      })
-    } catch (error) {
-      console.error("Logout error:", error)
-    }
-    
-    // Clear client-side tokens
-    localStorage.removeItem("access_token")
-    localStorage.removeItem("id_token")
-    router.push("/")
-  }
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -183,12 +167,7 @@ export default function Dashboard() {
       <main className="flex w-full max-w-2xl flex-col gap-6 rounded-lg bg-white p-8 shadow-lg dark:bg-zinc-900">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <button
-            onClick={handleLogout}
-            className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 transition"
-          >
-            Logout
-          </button>
+          <LogoutButton />
         </div>
 
         <div className="rounded border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
