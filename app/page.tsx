@@ -75,8 +75,8 @@ function HomeContent() {
       usp.set("code_challenge", codeChallenge)
       usp.set("code_challenge_method", "S256")
 
-      const authorizationEndpoint = process.env.NEXT_PUBLIC_OAUTH2_AUTHORIZATION_ENDPOINT!
-      setAuthUrl(`${authorizationEndpoint}?${usp.toString()}`)
+      const authorizationUrl = process.env.NEXT_PUBLIC_OAUTH2_AUTHORIZATION_URL!
+      setAuthUrl(`${authorizationUrl}/oauth2/authorize?${usp.toString()}`)
     }
 
     checkAuthAndSetupPKCE()

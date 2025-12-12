@@ -21,7 +21,7 @@ EOL
 ```sh
 # This is configuration for staging-auth with http-only mode
 tee .env.local<<EOL
-NEXT_PUBLIC_OAUTH2_AUTHORIZATION_ENDPOINT=https://staging-auth.apedax.com/oauth2/authorize
+NEXT_PUBLIC_OAUTH2_AUTHORIZATION_URL=https://staging-auth.apedax.com
 OAUTH2_TOKEN_ENDPOINT=https://staging-auth.apedax.com/oauth2/token
 OAUTH2_CLIENT_SECRET=P9fMuNLHz9XtJs43gjMyNaguXrbchXEwQZxptu4Zi
 
@@ -64,7 +64,7 @@ Configuration is managed through environment variables in `.env.local`:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_OAUTH2_AUTHORIZATION_ENDPOINT` | OAuth2 authorization endpoint | `http://localhost:3072/oauth2/authorize` |
+| `NEXT_PUBLIC_OAUTH2_AUTHORIZATION_URL` | OAuth2 authorization endpoint | `http://localhost:3072` |
 | `NEXT_PUBLIC_OAUTH2_TOKEN_ENDPOINT` | OAuth2 token endpoint | `http://localhost:3072/oauth2/token` |
 | `NEXT_PUBLIC_OAUTH2_CLIENT_ID` | OAuth2 client ID | `nxmarket-client-web` |
 | `NEXT_PUBLIC_OAUTH2_REDIRECT_URI` | OAuth2 redirect URI | `http://localhost:3074/login/oauth2-code` |
@@ -89,3 +89,53 @@ app/
 └── login/oauth2-code/
     └── page.tsx               # OAuth2 callback handler
 ```
+
+# Logout
+
+## Logout locally (no OIDC)
+
+## ✅ High-Level Concept: Client-Initiated Logout in OAuth2/OIDC
+### 1. The client cannot “log out” of the Authorization Server directly.
+
+- OAuth2 itself does not define logout.
+- Logout is part of OIDC (OpenID Connect) via:
+- RP-Initiated Logout (front-channel logout)
+- Back-channel logout
+
+Spring Authorization Server currently implements OIDC Logout Endpoints (depending on version).
+
+### 2. Logout has two parts
+#### (A) LOGOUT FROM THE CLIENT APP (Local logout)
+
+The client:
+
+1. Deletes local session/cookies
+2. Deletes stored tokens
+3. Redirects user to the Authorization Server’s logout page
+
+Example (client handles UI/session logout):
+
+```java
+SecurityContextLogoutHandler handler = new SecurityContextLogoutHandler();
+handler.logout(request, response, auth);
+```
+
+Then redirect to AS:
+```
+/connect/logout?id_token_hint={id_token}&post_logout_redirect_uri={uri}
+```
+
+### (B) LOGOUT FROM THE AUTHORIZATION SERVER (Global logout)
+
+After redirect, the Authorization Server will:
+
+1. Kill the AS session
+2. Kill SSO cookies
+3. Optionally revoke tokens
+4. Redirect back to the client (post_logout_redirect_uri)
+
+### 3. ⚙️ What the client must store
+
+To do logout properly, the client needs the user’s ID Token (from login response).
+It uses it as the id_token_hint parameter when redirecting to the Authorization Server logout endpoint.
+

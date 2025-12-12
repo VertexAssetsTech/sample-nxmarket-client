@@ -42,7 +42,7 @@ OAUTH2_CLIENT_SECRET=your-client-secret
 These are used by the frontend for initiating the OAuth2 flow. Prefixed with `NEXT_PUBLIC_`.
 
 ```bash
-NEXT_PUBLIC_OAUTH2_AUTHORIZATION_ENDPOINT=https://your-auth-server.com/oauth2/authorize
+NEXT_PUBLIC_OAUTH2_AUTHORIZATION_URL=https://your-auth-server.com
 NEXT_PUBLIC_OAUTH2_CLIENT_ID=your-client-id
 NEXT_PUBLIC_OAUTH2_SCOPE=openid profile email
 NEXT_PUBLIC_OAUTH2_REDIRECT_URI=http://localhost:3074/login/oauth2-code

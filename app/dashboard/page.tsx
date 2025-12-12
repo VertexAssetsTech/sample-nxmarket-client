@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { LogoutButton } from "./components/LogoutButton"
+import { OidcLogoutButton } from "./components/OidcLogoutButton"
 
 interface UserInfo {
   sub?: string
@@ -93,14 +94,15 @@ export default function Dashboard() {
           response = await makeRequest(newToken)
         } else {
           // Refresh failed - redirect to login
-          router.push("/")
+          // router.push("/")
+          console.error("Session expired -- why can't get refresh token?", response.status, response.statusText)
           throw new Error("Session expired")
         }
       }
 
       return response
     },
-    [refreshAccessToken, router]
+    []
   )
 
   useEffect(() => {
@@ -171,7 +173,10 @@ export default function Dashboard() {
       <main className="flex w-full max-w-2xl flex-col gap-6 rounded-lg bg-white p-8 shadow-lg dark:bg-zinc-900">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <LogoutButton />
+          <div className="flex gap-2">
+            <LogoutButton />
+            <OidcLogoutButton />
+          </div>
         </div>
 
         <div className="rounded border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">

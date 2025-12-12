@@ -15,7 +15,7 @@ export function LogoutButton() {
     } catch (error) {
       console.error("Logout error:", error)
     }
-    
+
     // Clear client-side tokens
     localStorage.removeItem("access_token")
     localStorage.removeItem("id_token")
@@ -23,11 +23,8 @@ export function LogoutButton() {
   }
 
   return (
-    <button
-      onClick={handleLogout}
-      className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 transition"
-    >
-      Logout
+    <button onClick={handleLogout} className="rounded bg-green-600 px-4 py-2 text-white hover:bg-green-700 transition">
+      Locally Logout
     </button>
   )
 }
