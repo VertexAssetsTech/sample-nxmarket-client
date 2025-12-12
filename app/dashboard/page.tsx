@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useCallback, useEffect, useState } from "react"
 import { LogoutButton } from "./components/LogoutButton"
 
 interface UserInfo {
@@ -49,13 +49,13 @@ export default function Dashboard() {
       }
 
       const data = await response.json()
-      
+
       // Update stored access token
       localStorage.setItem("access_token", data.access_token)
       if (data.id_token) {
         localStorage.setItem("id_token", data.id_token)
       }
-      
+
       return data.access_token
     } catch (error) {
       console.error("Token refresh error:", error)
@@ -64,41 +64,44 @@ export default function Dashboard() {
   }, [])
 
   // Make an authenticated API request with automatic token refresh
-  const fetchWithAuth = useCallback(async (url: string, options: RequestInit = {}): Promise<Response> => {
-    let token = localStorage.getItem("access_token")
-    
-    const makeRequest = async (accessToken: string) => {
-      return fetch(url, {
-        ...options,
-        headers: {
-          ...options.headers,
-          "Authorization": `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      })
-    }
+  const fetchWithAuth = useCallback(
+    async (url: string, options: RequestInit = {}): Promise<Response> => {
+      let token = localStorage.getItem("access_token")
 
-    if (!token) {
-      throw new Error("No access token available")
-    }
-
-    let response = await makeRequest(token)
-
-    // If unauthorized, try to refresh the token
-    if (response.status === 401) {
-      const newToken = await refreshAccessToken()
-      if (newToken) {
-        setAccessToken(newToken)
-        response = await makeRequest(newToken)
-      } else {
-        // Refresh failed - redirect to login
-        router.push("/")
-        throw new Error("Session expired")
+      const makeRequest = async (accessToken: string) => {
+        return fetch(url, {
+          ...options,
+          headers: {
+            ...options.headers,
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        })
       }
-    }
 
-    return response
-  }, [refreshAccessToken, router])
+      if (!token) {
+        throw new Error("No access token available")
+      }
+
+      let response = await makeRequest(token)
+
+      // If unauthorized, try to refresh the token
+      if (response.status === 401) {
+        const newToken = await refreshAccessToken()
+        if (newToken) {
+          setAccessToken(newToken)
+          response = await makeRequest(newToken)
+        } else {
+          // Refresh failed - redirect to login
+          router.push("/")
+          throw new Error("Session expired")
+        }
+      }
+
+      return response
+    },
+    [refreshAccessToken, router]
+  )
 
   useEffect(() => {
     // Check for access token
@@ -127,13 +130,13 @@ export default function Dashboard() {
     const fetchProfile = async () => {
       setProfileLoading(true)
       setProfileError(null)
-      
+
       try {
         const apiUrl = process.env.NEXT_PUBLIC_NXMARKET_API
         if (!apiUrl) {
           throw new Error("NEXT_PUBLIC_NXMARKET_API environment variable is not set")
         }
-        
+
         const response = await fetchWithAuth(`${apiUrl}/api/v1/users/me`)
 
         if (!response.ok) {
@@ -152,7 +155,8 @@ export default function Dashboard() {
 
     fetchProfile()
     setLoading(false)
-  }, [router, fetchWithAuth])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   if (loading) {
     return (
@@ -271,13 +275,10 @@ export default function Dashboard() {
         <div className="rounded border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
           <h2 className="mb-3 text-xl font-semibold">Access Token</h2>
           <div className="overflow-x-auto">
-            <code className="block break-all rounded bg-white p-3 text-xs dark:bg-zinc-900">
-              {accessToken}
-            </code>
+            <code className="block break-all rounded bg-white p-3 text-xs dark:bg-zinc-900">{accessToken}</code>
           </div>
         </div>
       </main>
     </div>
   )
 }
-
