@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 import { LogoutButton } from "./components/LogoutButton"
 import { OidcLogoutButton } from "./components/OidcLogoutButton"
+import { RefreshTokenButton } from "./components/RefreshTokenButton"
 
 interface UserInfo {
   sub?: string
@@ -32,6 +33,7 @@ export default function Dashboard() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [profileInfo, setProfileInfo] = useState<ProfileInfo | null>(null)
   const [accessToken, setAccessToken] = useState<string | null>(null)
+  const [refreshToken, setRefreshToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileError, setProfileError] = useState<string | null>(null)
@@ -40,6 +42,7 @@ export default function Dashboard() {
     // Check for access token
     const token = localStorage.getItem("access_token")
     const idToken = localStorage.getItem("id_token")
+    const refreshToken = localStorage.getItem("refresh_token")
 
     if (!token) {
       router.push("/")
@@ -47,7 +50,7 @@ export default function Dashboard() {
     }
 
     setAccessToken(token)
-
+    setRefreshToken(refreshToken)
     // Parse ID token to get user info
     if (idToken) {
       try {
@@ -96,6 +99,23 @@ export default function Dashboard() {
     setLoading(false)
   }, [router])
 
+  const handleTokenRefreshed = (newAccessToken: string) => {
+    // Update access token state
+    setAccessToken(newAccessToken)
+
+    // Parse new ID token to update user info
+    const newIdToken = localStorage.getItem("id_token")
+    if (newIdToken) {
+      try {
+        const parts = newIdToken.split(".")
+        const payload = JSON.parse(atob(parts[1]))
+        setUserInfo(payload)
+      } catch (error) {
+        console.error("Failed to parse new ID token:", error)
+      }
+    }
+  }
+
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -110,6 +130,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <div className="flex gap-2">
+            {refreshToken && <RefreshTokenButton onTokenRefreshed={handleTokenRefreshed} refreshToken={refreshToken} />}
             <LogoutButton />
             <OidcLogoutButton />
           </div>
