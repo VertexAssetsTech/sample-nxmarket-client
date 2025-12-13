@@ -30,7 +30,7 @@ export function OidcLogoutButton() {
       }
 
       // Add post_logout_redirect_uri to redirect back to your app after logout
-      const postLogoutRedirectUri = `${window.location.origin}?logged_out=true`
+      const postLogoutRedirectUri = process.env.NEXT_PUBLIC_OAUTH2_POST_LOGOUT_REDIRECT_URI || `${window.location.origin}?logged_out=true`
       logoutUrl.searchParams.set("post_logout_redirect_uri", postLogoutRedirectUri)
 
       // Redirect to the authorization server's logout endpoint
