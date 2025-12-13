@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation"
 import { useCallback, useEffect, useState } from "react"
 import { LogoutButton } from "./components/LogoutButton"
 import { OidcLogoutButton } from "./components/OidcLogoutButton"
+import { RefreshTokenButton } from "./components/RefreshTokenButton"
 
 interface UserInfo {
   sub?: string
@@ -36,79 +37,43 @@ export default function Dashboard() {
   const [profileLoading, setProfileLoading] = useState(false)
   const [profileError, setProfileError] = useState<string | null>(null)
 
-  // Refresh access token using HTTP-only refresh token cookie
-  const refreshAccessToken = useCallback(async (): Promise<string | null> => {
-    try {
-      const response = await fetch("/api/auth/refresh", {
-        method: "POST",
-        credentials: "include", // Include cookies
-      })
-
-      if (!response.ok) {
-        // Refresh failed - user needs to re-authenticate
-        return null
-      }
-
-      const data = await response.json()
-
-      // Update stored access token
-      localStorage.setItem("access_token", data.access_token)
-      if (data.id_token) {
-        localStorage.setItem("id_token", data.id_token)
-      }
-
-      return data.access_token
-    } catch (error) {
-      console.error("Token refresh error:", error)
-      return null
-    }
-  }, [])
-
   // Make an authenticated API request with automatic token refresh
   const fetchWithAuth = useCallback(
     async (url: string, options: RequestInit = {}): Promise<Response> => {
-      let token = localStorage.getItem("access_token")
-
-      const makeRequest = async (accessToken: string) => {
+      const makeRequest = async (access_token: string) => {
         return fetch(url, {
           ...options,
           headers: {
             ...options.headers,
-            Authorization: `Bearer ${accessToken}`,
+            Authorization: `Bearer ${access_token}`,
             "Content-Type": "application/json",
           },
         })
       }
 
-      if (!token) {
+      if (!accessToken) {
         throw new Error("No access token available")
       }
 
-      let response = await makeRequest(token)
+      const response = await makeRequest(accessToken)
 
       // If unauthorized, try to refresh the token
       if (response.status === 401) {
-        const newToken = await refreshAccessToken()
-        if (newToken) {
-          setAccessToken(newToken)
-          response = await makeRequest(newToken)
-        } else {
-          // Refresh failed - redirect to login
-          // router.push("/")
-          console.error("Session expired -- why can't get refresh token?", response.status, response.statusText)
-          throw new Error("Session expired")
-        }
+        // Refresh failed - redirect to login
+        // router.push("/")
+        console.error("Session expired -- why can't get refresh token?", response.status, response.statusText)
+        throw new Error("Session expired")
       }
 
       return response
     },
-    []
+    [accessToken]
   )
 
   useEffect(() => {
     // Check for access token
-    const token = localStorage.getItem("access_token")
     const idToken = localStorage.getItem("id_token")
+    const token = localStorage.getItem("access_token")
 
     if (!token) {
       router.push("/")
@@ -157,8 +122,24 @@ export default function Dashboard() {
 
     fetchProfile()
     setLoading(false)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  }, [fetchWithAuth, router])
+
+  const handleTokenRefreshed = (newAccessToken: string) => {
+    // Update access token state
+    setAccessToken(newAccessToken)
+
+    // Parse new ID token to update user info
+    const newIdToken = localStorage.getItem("id_token")
+    if (newIdToken) {
+      try {
+        const parts = newIdToken.split(".")
+        const payload = JSON.parse(atob(parts[1]))
+        setUserInfo(payload)
+      } catch (error) {
+        console.error("Failed to parse new ID token:", error)
+      }
+    }
+  }
 
   if (loading) {
     return (
@@ -174,6 +155,7 @@ export default function Dashboard() {
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Dashboard</h1>
           <div className="flex gap-2">
+            <RefreshTokenButton onTokenRefreshed={handleTokenRefreshed} />
             <LogoutButton />
             <OidcLogoutButton />
           </div>

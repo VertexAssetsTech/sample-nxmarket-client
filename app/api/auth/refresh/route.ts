@@ -43,13 +43,14 @@ export async function POST() {
     const tokenParams = new URLSearchParams()
     tokenParams.set("grant_type", "refresh_token")
     tokenParams.set("refresh_token", refreshToken)
-    tokenParams.set("client_id", clientId)
-    tokenParams.set("client_secret", clientSecret)
 
     const tokenResponse = await fetch(tokenEndpoint, {
       method: "POST",
       headers: {
         "Content-Type": "application/x-www-form-urlencoded",
+        
+        // Basic Authentication type for this client
+        "Authorization": `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
       },
       body: tokenParams.toString(),
     })
