@@ -46,7 +46,7 @@ Configuration is managed through environment variables in `.env.local`:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `NEXT_PUBLIC_OAUTH2_AUTHORIZATION_ENDPOINT` | OAuth2 authorization endpoint | `http://localhost:3072/oauth2/authorize` |
+| `NEXT_PUBLIC_OAUTH2_AUTHORIZATION_URL` | OAuth2 authorization endpoint | `http://localhost:3072/oauth2/authorize` |
 | `NEXT_PUBLIC_OAUTH2_TOKEN_ENDPOINT` | OAuth2 token endpoint | `http://localhost:3072/oauth2/token` |
 | `NEXT_PUBLIC_OAUTH2_CLIENT_ID` | OAuth2 client ID | `nxmarket-client-web` |
 | `NEXT_PUBLIC_OAUTH2_REDIRECT_URI` | OAuth2 redirect URI | `http://localhost:3074/login/oauth2-code` |

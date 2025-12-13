@@ -1,7 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
+import { useEffect, useState } from "react"
+import { LogoutButton } from "./components/LogoutButton"
+import { OidcLogoutButton } from "./components/OidcLogoutButton"
 
 interface UserInfo {
   sub?: string
@@ -61,17 +63,17 @@ export default function Dashboard() {
     const fetchProfile = async () => {
       setProfileLoading(true)
       setProfileError(null)
-      
+
       try {
         const apiUrl = process.env.NEXT_PUBLIC_NXMARKET_API
         if (!apiUrl) {
           throw new Error("NEXT_PUBLIC_NXMARKET_API environment variable is not set")
         }
-        
+
         const response = await fetch(`${apiUrl}/api/v1/users/me`, {
           method: "GET",
           headers: {
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
         })
@@ -94,13 +96,6 @@ export default function Dashboard() {
     setLoading(false)
   }, [router])
 
-  const handleLogout = () => {
-    localStorage.removeItem("access_token")
-    localStorage.removeItem("refresh_token")
-    localStorage.removeItem("id_token")
-    router.push("/")
-  }
-
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-50 font-sans dark:bg-black">
@@ -114,12 +109,10 @@ export default function Dashboard() {
       <main className="flex w-full max-w-2xl flex-col gap-6 rounded-lg bg-white p-8 shadow-lg dark:bg-zinc-900">
         <div className="flex items-center justify-between">
           <h1 className="text-3xl font-bold">Dashboard</h1>
-          <button
-            onClick={handleLogout}
-            className="rounded bg-red-600 px-4 py-2 text-white hover:bg-red-700 transition"
-          >
-            Logout
-          </button>
+          <div className="flex gap-2">
+            <LogoutButton />
+            <OidcLogoutButton />
+          </div>
         </div>
 
         <div className="rounded border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
@@ -223,13 +216,10 @@ export default function Dashboard() {
         <div className="rounded border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
           <h2 className="mb-3 text-xl font-semibold">Access Token</h2>
           <div className="overflow-x-auto">
-            <code className="block break-all rounded bg-white p-3 text-xs dark:bg-zinc-900">
-              {accessToken}
-            </code>
+            <code className="block break-all rounded bg-white p-3 text-xs dark:bg-zinc-900">{accessToken}</code>
           </div>
         </div>
       </main>
     </div>
   )
 }
-

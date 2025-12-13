@@ -1,8 +1,8 @@
 "use client"
 
 import Link from "next/link"
-import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
+import { Suspense, useEffect, useState } from "react"
 
 // Generate a random string for code_verifier
 function generateCodeVerifier(): string {
@@ -63,8 +63,8 @@ function HomeContent() {
       usp.set("code_challenge", codeChallenge)
       usp.set("code_challenge_method", "S256")
 
-      const authorizationEndpoint = process.env.NEXT_PUBLIC_OAUTH2_AUTHORIZATION_ENDPOINT!
-      setAuthUrl(`${authorizationEndpoint}?${usp.toString()}`)
+      const authorizationEndpoint = process.env.NEXT_PUBLIC_OAUTH2_AUTHORIZATION_URL!
+      setAuthUrl(`${authorizationEndpoint}/oauth2/authorize?${usp.toString()}`)
     }
 
     setupPKCE()
